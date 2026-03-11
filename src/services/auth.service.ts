@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../config/database';
 import { env } from '../config/env';
-import { UserRole } from '@prisma/client';
+import { UserRole, SellerStatus } from '@prisma/client';
 
 export interface AuthTokens {
   accessToken: string;
@@ -14,10 +14,11 @@ export interface AuthUser {
   email: string;
   name: string | null;
   role: UserRole;
+  sellerStatus: SellerStatus | null;
 }
 
-function signTokens(userId: string, role: UserRole): AuthTokens {
-  const accessToken = jwt.sign({ userId, role }, env.jwt.secret, {
+function signTokens(userId: string, role: UserRole, sellerStatus: SellerStatus | null): AuthTokens {
+  const accessToken = jwt.sign({ userId, role, sellerStatus }, env.jwt.secret, {
     expiresIn: env.jwt.expiresIn as jwt.SignOptions['expiresIn'],
   });
   const refreshToken = jwt.sign({ userId }, env.jwt.refreshSecret, {
@@ -26,8 +27,10 @@ function signTokens(userId: string, role: UserRole): AuthTokens {
   return { accessToken, refreshToken };
 }
 
-function toAuthUser(user: { id: string; email: string; name: string | null; role: UserRole }): AuthUser {
-  return { id: user.id, email: user.email, name: user.name, role: user.role };
+type DbUser = { id: string; email: string; name: string | null; role: UserRole; sellerStatus: SellerStatus | null };
+
+function toAuthUser(user: DbUser): AuthUser {
+  return { id: user.id, email: user.email, name: user.name, role: user.role, sellerStatus: user.sellerStatus };
 }
 
 export async function register(
@@ -40,11 +43,12 @@ export async function register(
   if (existing) throw new Error('Email already in use');
 
   const passwordHash = await bcrypt.hash(password, 12);
+  const sellerStatus = role === UserRole.SELLER ? SellerStatus.PENDING : null;
   const user = await prisma.user.create({
-    data: { email, passwordHash, name: name ?? null, role },
+    data: { email, passwordHash, name: name ?? null, role, sellerStatus },
   });
 
-  const tokens = signTokens(user.id, role);
+  const tokens = signTokens(user.id, user.role, user.sellerStatus);
   return { user: toAuthUser(user), tokens };
 }
 
@@ -58,7 +62,7 @@ export async function login(
   const valid = await bcrypt.compare(password, user.passwordHash);
   if (!valid) throw new Error('Invalid credentials');
 
-  const tokens = signTokens(user.id, user.role);
+  const tokens = signTokens(user.id, user.role, user.sellerStatus);
   return { user: toAuthUser(user), tokens };
 }
 
@@ -67,8 +71,15 @@ export async function refreshTokens(refreshToken: string): Promise<AuthTokens> {
     const payload = jwt.verify(refreshToken, env.jwt.refreshSecret) as { userId: string };
     const user = await prisma.user.findUnique({ where: { id: payload.userId } });
     if (!user) throw new Error('User not found');
-    return signTokens(user.id, user.role);
+    return signTokens(user.id, user.role, user.sellerStatus);
   } catch {
     throw new Error('Invalid or expired refresh token');
   }
+}
+
+export async function getMe(userId: string): Promise<{ user: AuthUser; tokens: AuthTokens }> {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw new Error('User not found');
+  const tokens = signTokens(user.id, user.role, user.sellerStatus);
+  return { user: toAuthUser(user), tokens };
 }
