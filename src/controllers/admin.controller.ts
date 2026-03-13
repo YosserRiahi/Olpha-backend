@@ -88,3 +88,59 @@ export async function rejectShopAdminHandler(req: AuthRequest, res: Response): P
     res.status(400).json({ error: message });
   }
 }
+
+// ── GET /admin/sellers (all sellers) ─────────────────────────────────────────
+export async function listAllSellersHandler(_req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const sellers = await prisma.user.findMany({
+      where: { role: 'SELLER' },
+      select: { id: true, email: true, name: true, role: true, sellerStatus: true, createdAt: true },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json(sellers);
+  } catch {
+    res.status(500).json({ error: 'Failed to fetch sellers' });
+  }
+}
+
+// ── GET /admin/shops (all shops) ──────────────────────────────────────────────
+export async function listAllShopsHandler(_req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const shops = await prisma.shop.findMany({ orderBy: { createdAt: 'desc' } });
+    res.json(shops);
+  } catch {
+    res.status(500).json({ error: 'Failed to fetch shops' });
+  }
+}
+
+// ── GET /admin/users (all users) ──────────────────────────────────────────────
+export async function listAllUsersHandler(_req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const users = await prisma.user.findMany({
+      select: { id: true, email: true, name: true, role: true, sellerStatus: true, createdAt: true },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json(users);
+  } catch {
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+}
+
+// ── GET /admin/stats ──────────────────────────────────────────────────────────
+export async function getStatsHandler(_req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const [totalUsers, totalSellers, totalBuyers, pendingSellers, totalShops, approvedShops, pendingShops] =
+      await Promise.all([
+        prisma.user.count(),
+        prisma.user.count({ where: { role: 'SELLER' } }),
+        prisma.user.count({ where: { role: 'BUYER' } }),
+        prisma.user.count({ where: { sellerStatus: SellerStatus.PENDING } }),
+        prisma.shop.count(),
+        prisma.shop.count({ where: { isApproved: true } }),
+        prisma.shop.count({ where: { isApproved: false } }),
+      ]);
+    res.json({ totalUsers, totalSellers, totalBuyers, pendingSellers, totalShops, approvedShops, pendingShops });
+  } catch {
+    res.status(500).json({ error: 'Failed to fetch stats' });
+  }
+}

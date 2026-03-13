@@ -14,7 +14,6 @@ export interface ProductData {
 export async function createProduct(ownerId: string, data: ProductData) {
   const shop = await prisma.shop.findFirst({ where: { ownerId } });
   if (!shop) throw new Error('You do not have a shop');
-  if (!shop.isApproved) throw new Error('Your shop is not approved yet');
 
   return prisma.product.create({
     data: { shopId: shop.id, ...data },

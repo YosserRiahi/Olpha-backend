@@ -37,11 +37,10 @@ export async function updateMyShop(ownerId: string, data: Partial<ShopData>) {
   });
 }
 
-// ── List all approved shops (public) ────────────────────────────────────────
+// ── List all shops (public) ──────────────────────────────────────────────────
 export async function listApprovedShops(opts?: { category?: string; search?: string }) {
   return prisma.shop.findMany({
     where: {
-      isApproved: true,
       ...(opts?.category ? { category: opts.category } : {}),
       ...(opts?.search
         ? { name: { contains: opts.search, mode: 'insensitive' } }
@@ -58,23 +57,12 @@ export async function getShopById(id: string) {
   return shop;
 }
 
-// ── ADMIN: list pending shops ────────────────────────────────────────────────
-export async function listPendingShops() {
-  return prisma.shop.findMany({
-    where: { isApproved: false },
-    orderBy: { createdAt: 'asc' },
-  });
+// ── ADMIN: list all shops ────────────────────────────────────────────────────
+export async function listAllShopsAdmin() {
+  return prisma.shop.findMany({ orderBy: { createdAt: 'desc' } });
 }
 
-// ── ADMIN: approve shop ──────────────────────────────────────────────────────
-export async function approveShop(id: string) {
-  return prisma.shop.update({
-    where: { id },
-    data: { isApproved: true },
-  });
-}
-
-// ── ADMIN: reject / delete shop ──────────────────────────────────────────────
-export async function rejectShop(id: string) {
+// ── ADMIN: delete shop ───────────────────────────────────────────────────────
+export async function deleteShopAdmin(id: string) {
   return prisma.shop.delete({ where: { id } });
 }

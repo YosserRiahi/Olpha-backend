@@ -7,9 +7,8 @@ import {
   updateMyShopHandler,
   listShopsHandler,
   getShopByIdHandler,
-  listPendingShopsHandler,
-  approveShopHandler,
-  rejectShopHandler,
+  listAllShopsAdminHandler,
+  deleteShopAdminHandler,
 } from '../controllers/shop.controller';
 
 const router = Router();
@@ -24,8 +23,7 @@ router.get('/me',   authMiddleware, requireRole(UserRole.SELLER), getMyShopHandl
 router.put('/me',   authMiddleware, requireRole(UserRole.SELLER), updateMyShopHandler); // PUT  /shops/me
 
 // ── Admin ────────────────────────────────────────────────────────────────────
-router.get('/admin/pending',      authMiddleware, requireRole(UserRole.ADMIN), listPendingShopsHandler);     // GET  /shops/admin/pending
-router.put('/admin/:id/approve',  authMiddleware, requireRole(UserRole.ADMIN), approveShopHandler);          // PUT  /shops/admin/:id/approve
-router.delete('/admin/:id/reject',authMiddleware, requireRole(UserRole.ADMIN), rejectShopHandler);           // DELETE /shops/admin/:id/reject
+router.get('/admin/all',       authMiddleware, requireRole(UserRole.ADMIN), listAllShopsAdminHandler);  // GET    /shops/admin/all
+router.delete('/admin/:id',    authMiddleware, requireRole(UserRole.ADMIN), deleteShopAdminHandler);    // DELETE /shops/admin/:id
 
 export default router;

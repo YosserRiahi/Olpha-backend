@@ -61,34 +61,23 @@ export async function getShopByIdHandler(req: AuthRequest, res: Response): Promi
   }
 }
 
-// ── Admin: list pending shops ────────────────────────────────────────────────
-export async function listPendingShopsHandler(req: AuthRequest, res: Response): Promise<void> {
+// ── Admin: list all shops ────────────────────────────────────────────────────
+export async function listAllShopsAdminHandler(req: AuthRequest, res: Response): Promise<void> {
   try {
-    const shops = await shopService.listPendingShops();
+    const shops = await shopService.listAllShopsAdmin();
     res.json(shops);
   } catch {
-    res.status(500).json({ error: 'Failed to fetch pending shops' });
+    res.status(500).json({ error: 'Failed to fetch shops' });
   }
 }
 
-// ── Admin: approve shop ──────────────────────────────────────────────────────
-export async function approveShopHandler(req: AuthRequest, res: Response): Promise<void> {
+// ── Admin: delete shop ───────────────────────────────────────────────────────
+export async function deleteShopAdminHandler(req: AuthRequest, res: Response): Promise<void> {
   try {
-    const shop = await shopService.approveShop(req.params.id as string);
-    res.json(shop);
+    await shopService.deleteShopAdmin(req.params.id as string);
+    res.json({ message: 'Shop deleted' });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Failed to approve shop';
-    res.status(400).json({ error: message });
-  }
-}
-
-// ── Admin: reject shop ───────────────────────────────────────────────────────
-export async function rejectShopHandler(req: AuthRequest, res: Response): Promise<void> {
-  try {
-    await shopService.rejectShop(req.params.id as string);
-    res.json({ message: 'Shop rejected and removed' });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Failed to reject shop';
+    const message = err instanceof Error ? err.message : 'Failed to delete shop';
     res.status(400).json({ error: message });
   }
 }

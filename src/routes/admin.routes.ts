@@ -8,6 +8,10 @@ import {
   listPendingShopsAdminHandler,
   approveShopAdminHandler,
   rejectShopAdminHandler,
+  listAllSellersHandler,
+  listAllShopsHandler,
+  listAllUsersHandler,
+  getStatsHandler,
 } from '../controllers/admin.controller';
 
 const router = Router();
@@ -15,12 +19,20 @@ const router = Router();
 // All admin routes require authentication + ADMIN role
 router.use(authMiddleware, requireRole(UserRole.ADMIN));
 
-// ── Seller approval ──────────────────────────────────────────────────────────
+// ── Stats ─────────────────────────────────────────────────────────────────────
+router.get('/stats',                getStatsHandler);             // GET  /admin/stats
+
+// ── Users ─────────────────────────────────────────────────────────────────────
+router.get('/users',                listAllUsersHandler);         // GET  /admin/users
+
+// ── Sellers ───────────────────────────────────────────────────────────────────
+router.get('/sellers',              listAllSellersHandler);       // GET  /admin/sellers
 router.get('/sellers/pending',      listPendingSellersHandler);   // GET  /admin/sellers/pending
 router.put('/sellers/:id/approve',  approveSellerHandler);        // PUT  /admin/sellers/:id/approve
 router.put('/sellers/:id/reject',   rejectSellerHandler);         // PUT  /admin/sellers/:id/reject
 
-// ── Shop approval ────────────────────────────────────────────────────────────
+// ── Shops ─────────────────────────────────────────────────────────────────────
+router.get('/shops',                listAllShopsHandler);         // GET  /admin/shops
 router.get('/shops/pending',        listPendingShopsAdminHandler);// GET  /admin/shops/pending
 router.put('/shops/:id/approve',    approveShopAdminHandler);     // PUT  /admin/shops/:id/approve
 router.delete('/shops/:id/reject',  rejectShopAdminHandler);      // DELETE /admin/shops/:id/reject
