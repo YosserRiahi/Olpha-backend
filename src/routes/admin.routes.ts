@@ -5,9 +5,7 @@ import {
   listPendingSellersHandler,
   approveSellerHandler,
   rejectSellerHandler,
-  listPendingShopsAdminHandler,
-  approveShopAdminHandler,
-  rejectShopAdminHandler,
+  deleteShopAdminHandler,
   listAllSellersHandler,
   listAllShopsHandler,
   listAllUsersHandler,
@@ -31,10 +29,8 @@ router.get('/sellers/pending',      listPendingSellersHandler);   // GET  /admin
 router.put('/sellers/:id/approve',  approveSellerHandler);        // PUT  /admin/sellers/:id/approve
 router.put('/sellers/:id/reject',   rejectSellerHandler);         // PUT  /admin/sellers/:id/reject
 
-// ── Shops ─────────────────────────────────────────────────────────────────────
+// ── Shops (no approval — auto-approved on creation) ───────────────────────────
 router.get('/shops',                listAllShopsHandler);         // GET  /admin/shops
-router.get('/shops/pending',        listPendingShopsAdminHandler);// GET  /admin/shops/pending
-router.put('/shops/:id/approve',    approveShopAdminHandler);     // PUT  /admin/shops/:id/approve
-router.delete('/shops/:id/reject',  rejectShopAdminHandler);      // DELETE /admin/shops/:id/reject
+router.delete('/shops/:id',         deleteShopAdminHandler);      // DELETE /admin/shops/:id
 
 export default router;

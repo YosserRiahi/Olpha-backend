@@ -83,3 +83,11 @@ export async function getMe(userId: string): Promise<{ user: AuthUser; tokens: A
   const tokens = signTokens(user.id, user.role, user.sellerStatus);
   return { user: toAuthUser(user), tokens };
 }
+
+export async function updateProfile(userId: string, name: string): Promise<AuthUser> {
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data: { name: name.trim() },
+  });
+  return toAuthUser(user);
+}

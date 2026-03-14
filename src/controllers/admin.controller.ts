@@ -49,46 +49,6 @@ export async function rejectSellerHandler(req: AuthRequest, res: Response): Prom
   }
 }
 
-// ── GET /admin/shops/pending (moved from shop.routes.ts) ─────────────────────
-export async function listPendingShopsAdminHandler(_req: AuthRequest, res: Response): Promise<void> {
-  try {
-    const shops = await prisma.shop.findMany({
-      where: { isApproved: false },
-      orderBy: { createdAt: 'asc' },
-    });
-    res.json(shops);
-  } catch {
-    res.status(500).json({ error: 'Failed to fetch pending shops' });
-  }
-}
-
-// ── PUT /admin/shops/:id/approve ─────────────────────────────────────────────
-export async function approveShopAdminHandler(req: AuthRequest, res: Response): Promise<void> {
-  try {
-    const shop = await prisma.shop.update({
-      where: { id: req.params.id as string },
-      data: { isApproved: true },
-    });
-    console.log(`[ADMIN] shop approved → id: ${shop.id}  name: ${shop.name}`);
-    res.json(shop);
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Failed to approve shop';
-    res.status(400).json({ error: message });
-  }
-}
-
-// ── DELETE /admin/shops/:id/reject ───────────────────────────────────────────
-export async function rejectShopAdminHandler(req: AuthRequest, res: Response): Promise<void> {
-  try {
-    await prisma.shop.delete({ where: { id: req.params.id as string } });
-    console.log(`[ADMIN] shop rejected/deleted → id: ${req.params.id}`);
-    res.json({ message: 'Shop rejected and removed' });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Failed to reject shop';
-    res.status(400).json({ error: message });
-  }
-}
-
 // ── GET /admin/sellers (all sellers) ─────────────────────────────────────────
 export async function listAllSellersHandler(_req: AuthRequest, res: Response): Promise<void> {
   try {
@@ -113,6 +73,18 @@ export async function listAllShopsHandler(_req: AuthRequest, res: Response): Pro
   }
 }
 
+// ── DELETE /admin/shops/:id ───────────────────────────────────────────────────
+export async function deleteShopAdminHandler(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    await prisma.shop.delete({ where: { id: req.params.id as string } });
+    console.log(`[ADMIN] shop deleted → id: ${req.params.id}`);
+    res.json({ message: 'Shop deleted' });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Failed to delete shop';
+    res.status(400).json({ error: message });
+  }
+}
+
 // ── GET /admin/users (all users) ──────────────────────────────────────────────
 export async function listAllUsersHandler(_req: AuthRequest, res: Response): Promise<void> {
   try {
@@ -129,17 +101,15 @@ export async function listAllUsersHandler(_req: AuthRequest, res: Response): Pro
 // ── GET /admin/stats ──────────────────────────────────────────────────────────
 export async function getStatsHandler(_req: AuthRequest, res: Response): Promise<void> {
   try {
-    const [totalUsers, totalSellers, totalBuyers, pendingSellers, totalShops, approvedShops, pendingShops] =
+    const [totalUsers, totalSellers, totalBuyers, pendingSellers, totalShops] =
       await Promise.all([
         prisma.user.count(),
         prisma.user.count({ where: { role: 'SELLER' } }),
         prisma.user.count({ where: { role: 'BUYER' } }),
         prisma.user.count({ where: { sellerStatus: SellerStatus.PENDING } }),
         prisma.shop.count(),
-        prisma.shop.count({ where: { isApproved: true } }),
-        prisma.shop.count({ where: { isApproved: false } }),
       ]);
-    res.json({ totalUsers, totalSellers, totalBuyers, pendingSellers, totalShops, approvedShops, pendingShops });
+    res.json({ totalUsers, totalSellers, totalBuyers, pendingSellers, totalShops });
   } catch {
     res.status(500).json({ error: 'Failed to fetch stats' });
   }

@@ -74,3 +74,19 @@ export async function getMeHandler(req: AuthRequest, res: Response): Promise<voi
     res.status(404).json({ error: message });
   }
 }
+
+// PATCH /auth/me — update display name
+export async function updateProfileHandler(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const { name } = req.body;
+    if (!name || typeof name !== 'string' || !name.trim()) {
+      res.status(400).json({ error: 'name is required' });
+      return;
+    }
+    const user = await authService.updateProfile(req.userId!, name);
+    res.json({ user });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Update failed';
+    res.status(400).json({ error: message });
+  }
+}
